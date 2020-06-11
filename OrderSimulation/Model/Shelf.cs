@@ -13,7 +13,7 @@ using System.Text;
 
 namespace OrderSimulation.Model
 {
-    class Shelf
+    public class Shelf
     {
     }
 }

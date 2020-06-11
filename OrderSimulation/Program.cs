@@ -1,20 +1,20 @@
-﻿using System;
-
-namespace OrderSimulation
+﻿namespace OrderSimulation
 {
     class Program
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Start...");
+            Logger.Info("Start...");
 
             var orderHandler = new OrderHandler();
 
-            var oders = orderHandler.GetOrders();
+            var oders = OrderHandler.GetOrders();
 
             orderHandler.IngestOrder(oders);
 
-            Console.WriteLine("Done!");
+            Logger.Info("Done!");
         }
     }
 }
