@@ -1,4 +1,8 @@
-﻿namespace OrderSimulation
+﻿using OrderSimulation.Model;
+using System;
+using System.Threading.Tasks;
+
+namespace OrderSimulation
 {
     class Program
     {
@@ -8,11 +12,20 @@
         {
             Logger.Info("Start...");
 
-            var orderHandler = new OrderHandler();
+            var orders = Kitchen.GetOrders();
 
-            var oders = OrderHandler.GetOrders();
+            var orderHandler = new Kitchen();
+            var ran = new Random();
 
-            orderHandler.IngestOrder(oders);
+            int ordersPerSec = 2;   //ingest 2 orders per sec
+            foreach (var ord in orders)
+            {
+                orderHandler.ReceiveOrder(ord);
+
+                Courier.Pickup(ord, ran.Next(2, 6));  // 2-6 seconds later, arrives
+
+                Task.Delay(1000 / ordersPerSec).Wait();
+            }
 
             Logger.Info("Done!");
         }

@@ -7,20 +7,20 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace OrderSimulation.Model
 {
     class Courier
     {
-        public bool Pickup(Order order)
+        public static bool Pickup(Order order, int delay)
         {
+            Task.Delay(delay).Wait();
+
             return Deliver(order);
         }
 
-        private bool Deliver(Order order)
+        private static bool Deliver(Order order)
         {
             return true;
         }

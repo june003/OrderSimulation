@@ -15,5 +15,16 @@ namespace OrderSimulation.Model
 {
     public class Shelf
     {
+        private int _capacity;
+
+        public Shelf(int capacity)
+        {
+            _capacity = capacity;
+        }
+
+        internal bool Place(Order order)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

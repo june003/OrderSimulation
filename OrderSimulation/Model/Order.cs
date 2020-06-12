@@ -40,6 +40,8 @@ namespace OrderSimulation.Model
         [JsonProperty("decayRate")]
         public decimal DecayRate { get; set; }
 
+        public decimal Value => 1; //tbd
+
         public decimal GetValue(int orderAge)
         {
             if (ShelfLife == 0)
