@@ -26,5 +26,10 @@ namespace OrderSimulation.Model
         {
             throw new NotImplementedException();
         }
+
+        internal Order Pickup()
+        {
+            return null;
+        }
     }
 }

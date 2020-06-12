@@ -1,6 +1,4 @@
-﻿using OrderSimulation.Model;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace OrderSimulation
 {
@@ -11,20 +9,21 @@ namespace OrderSimulation
         static void Main(string[] args)
         {
             Logger.Info("Start...");
-
-            var orders = Kitchen.GetOrders();
-
-            var orderHandler = new Kitchen();
-            var ran = new Random();
-
-            int ordersPerSec = 2;   //ingest 2 orders per sec
-            foreach (var ord in orders)
+            try
             {
-                orderHandler.ReceiveOrder(ord);
+                var orders = OrderHandler.GetOrders();
 
-                Courier.Pickup(ord, ran.Next(2, 6));  // 2-6 seconds later, arrives
+                var handler = new OrderHandler();
 
-                Task.Delay(1000 / ordersPerSec).Wait();
+                if (!handler.ProcessOrders(orders, out string result))
+                {
+                    Logger.Error(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                return;
             }
 
             Logger.Info("Done!");

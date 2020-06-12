@@ -12,6 +12,7 @@ using OrderSimulation.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace OrderSimulation
 {
@@ -19,42 +20,40 @@ namespace OrderSimulation
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<Temperature, Shelf> _shelves = new Dictionary<Temperature, Shelf>();
+        private readonly Dictionary<Temperature, Shelf> _shelfDic = new Dictionary<Temperature, Shelf> {
+            {Temperature.Hot,      new Shelf(10) },
+            {Temperature.Cold,     new Shelf(10) },
+            {Temperature.Frozen,   new Shelf(10) },
+            {Temperature.Otehrs,   new Shelf(15) },
+        };
 
         public Kitchen()
         {
-            _shelves.Add(Temperature.Hot, new Shelf(10));
-            _shelves.Add(Temperature.Cold, new Shelf(10));
-            _shelves.Add(Temperature.Frozen, new Shelf(10));
-            _shelves.Add(Temperature.Otehrs, new Shelf(15));
         }
 
         internal void ReceiveOrder(Order order)
         {
-            while (!HandleOrder(order))
-            {
-
-            }
+            HandleOrder(order);
 
             Logger.Info($"Order {order.ID}:{order.Value} was processed.");
         }
 
         private bool HandleOrder(Order order)
         {
-            if (!_shelves.ContainsKey(order.Temperature))
+            if (!_shelfDic.ContainsKey(order.Temperature))
             {
                 Logger.Warn($"Order temperature is not valid: {order.ID}:{order.Value}");
                 return true;
             }
 
-            var oriShelf = _shelves[order.Temperature];
+            var oriShelf = _shelfDic[order.Temperature];
             if (oriShelf.Place(order))
             {
                 Logger.Info($"Placed order: {order.ID}:{order.Value}");
                 return true;
             }
 
-            var overflowShelf = _shelves[Temperature.Otehrs];
+            var overflowShelf = _shelfDic[Temperature.Otehrs];
             if (overflowShelf.Place(order))
             {
                 Logger.Info($"Placed order: {order.ID}:{order.Value}");
@@ -62,19 +61,6 @@ namespace OrderSimulation
             }
 
             return false;
-        }
-
-        public static List<Order> GetOrders(string orderPath = "./config/orders.json")
-        {
-            try
-            {
-                return JsonConvert.DeserializeObject<List<Order>>(File.ReadAllText(orderPath));
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                return null;
-            }
         }
 
     }

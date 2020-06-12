@@ -7,15 +7,19 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
+using System;
 using System.Threading.Tasks;
 
 namespace OrderSimulation.Model
 {
     class Courier
     {
-        public static bool Pickup(Order order, int delay)
+        private static readonly Random Rand = new Random();
+        public static int DelaySecond => Rand.Next(2, 6);
+
+        public static bool Pickup(Order order)
         {
-            Task.Delay(delay).Wait();
+            Task.Delay(DelaySecond).Wait();  // 2-6 seconds later, deliver
 
             return Deliver(order);
         }
@@ -24,5 +28,6 @@ namespace OrderSimulation.Model
         {
             return true;
         }
+
     }
 }
