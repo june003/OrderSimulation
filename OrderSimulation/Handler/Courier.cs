@@ -10,24 +10,29 @@
 using System;
 using System.Threading.Tasks;
 
-namespace OrderSimulation.Model
+namespace OrderSimulation.Handler
 {
     class Courier
     {
         private static readonly Random Rand = new Random();
         public static int DelaySecond => Rand.Next(2, 6);
 
-        public static bool Pickup(Order order)
+        public bool Pickup(Order order)
         {
             Task.Delay(DelaySecond).Wait();  // 2-6 seconds later, deliver
 
             return Deliver(order);
         }
 
-        private static bool Deliver(Order order)
+        private bool Deliver(Order order)
         {
+            if (order.Value <= 0)
+            {
+                return false;
+            }
+
+            order.Courier = this;
             return true;
         }
-
     }
 }

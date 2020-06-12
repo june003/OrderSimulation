@@ -7,15 +7,13 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OrderSimulation.Model
+namespace OrderSimulation.Handler
 {
     public class Shelf
     {
-        private int _capacity;
+        private readonly int _capacity;
+        private int _occupied = 0;
 
         public Shelf(int capacity)
         {
@@ -24,12 +22,23 @@ namespace OrderSimulation.Model
 
         internal bool Place(Order order)
         {
-            throw new NotImplementedException();
+            if (_occupied < _capacity)
+            {
+                order.Shelf = this;
+                ++_occupied;
+            }
+
+            return true;
         }
 
-        internal Order Pickup()
+        internal bool Pickup(Order order)
         {
-            return null;
+            if (_occupied > 0)
+            {
+                --_occupied;
+            }
+
+            return true;
         }
     }
 }

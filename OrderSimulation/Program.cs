@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OrderSimulation.Handler;
+using System;
 
 namespace OrderSimulation
 {
@@ -11,10 +12,9 @@ namespace OrderSimulation
             Logger.Info("Start...");
             try
             {
-                var orders = OrderHandler.GetOrders();
+                var orders = OrderHandler.LoadOrders("./config/orders.json");
 
                 var handler = new OrderHandler();
-
                 if (!handler.ProcessOrders(orders, out string result))
                 {
                     Logger.Error(result);

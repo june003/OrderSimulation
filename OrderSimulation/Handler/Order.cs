@@ -7,12 +7,12 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
-namespace OrderSimulation.Model
+namespace OrderSimulation.Handler
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum Temperature
@@ -40,23 +40,37 @@ namespace OrderSimulation.Model
         [JsonProperty("decayRate")]
         public decimal DecayRate { get; set; }
 
-        public decimal Value => 1; //tbd
-
-        public decimal GetValue(int orderAge)
-        {
-            if (ShelfLife == 0)
-            {
-                return 0;
-            }
-
-            return (ShelfLife - DecayRate * orderAge * ShelfDecayModifier) / ShelfLife;
-        }
-
-        private int ShelfDecayModifier
+        public decimal Value
         {
             get
             {
-                return (Temperature == Temperature.Cold || Temperature == Temperature.Hot || Temperature == Temperature.Frozen) ? 1 : 2;
+                if (ShelfLife <= 0)
+                {
+                    return 0;
+                }
+
+                return (ShelfLife - DecayRate * _age * ShelfDecayModifier) / ShelfLife;
+            }
+        }
+
+        private int ShelfDecayModifier => (Temperature == Temperature.Cold || Temperature == Temperature.Hot
+                                        || Temperature == Temperature.Frozen) ? 1 : 2;
+
+        public Shelf Shelf { get; internal set; }
+        internal Courier Courier { get; set; }
+
+        private int _age = 0; // by seconds
+        internal void Start()
+        {
+            Task.Run(() => Grow()).ConfigureAwait(false);
+        }
+
+        private void Grow()
+        {
+            while (true)
+            {
+                Task.Delay(1000).Wait();
+                ++_age;
             }
         }
     }

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 
-namespace OrderSimulation
+namespace OrderSimulation.Handler
 {
     class OrderConfig
     {

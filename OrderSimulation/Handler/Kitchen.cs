@@ -7,24 +7,19 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
-using Newtonsoft.Json;
-using OrderSimulation.Model;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 
-namespace OrderSimulation
+namespace OrderSimulation.Handler
 {
     class Kitchen
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<Temperature, Shelf> _shelfDic = new Dictionary<Temperature, Shelf> {
-            {Temperature.Hot,      new Shelf(10) },
-            {Temperature.Cold,     new Shelf(10) },
-            {Temperature.Frozen,   new Shelf(10) },
-            {Temperature.Otehrs,   new Shelf(15) },
+            {Temperature.Hot,    new Shelf(10) },
+            {Temperature.Cold,   new Shelf(10) },
+            {Temperature.Frozen, new Shelf(10) },
+            {Temperature.Otehrs, new Shelf(15) },
         };
 
         public Kitchen()

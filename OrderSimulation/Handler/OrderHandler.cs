@@ -8,13 +8,12 @@
 //
 //-----------------------------------------------------------------------------
 using Newtonsoft.Json;
-using OrderSimulation.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace OrderSimulation
+namespace OrderSimulation.Handler
 {
     class OrderHandler
     {
@@ -29,30 +28,19 @@ namespace OrderSimulation
 
         internal bool ProcessOrders(List<Order> orders, out string result)
         {
-            result = string.Empty;
-            if (!LoadConfig())
+            if (!LoadConfig("./config/config.json", out result))
             {
                 result = "Failed to load config file.";
                 return false;
             }
 
-            if (_orderConfig.IngestionRate <= 0)
-            {
-                result = "Please specify a valid ingestion rate.";
-                return false;
-            }
-
-            if (_orderConfig.IngestionRate > 1000)
-            {
-                result = "Please specify a valid ingestion rate(cannot process to many orders).";
-                return false;
-            }
-
             foreach (var ord in orders)
             {
+                ord.Start(); // order starts from here
+
                 Task.Run(() => _kitchen.ReceiveOrder(ord)).ConfigureAwait(false); // new thread for kitchen
 
-                Task.Run(() => Courier.Pickup(ord)).ConfigureAwait(false);  // new thread for Courier
+                Task.Run(() => Pickup(ord)).ConfigureAwait(false);  // new thread for Courier
 
                 Task.Delay(1000 / _orderConfig.IngestionRate).Wait();
             }
@@ -60,21 +48,42 @@ namespace OrderSimulation
             return true;
         }
 
-        private bool LoadConfig()
+        private void Pickup(Order order)
         {
+            var courier = new Courier();
+            courier.Pickup(order);
+        }
+
+        private bool LoadConfig(string path, out string result)
+        {
+            result = string.Empty;
             try
             {
-                _orderConfig = JsonConvert.DeserializeObject<OrderConfig>(File.ReadAllText("./config/config.json"));
+                _orderConfig = JsonConvert.DeserializeObject<OrderConfig>(File.ReadAllText(path));
+
+                if (_orderConfig.IngestionRate <= 0)
+                {
+                    result = "Please specify a valid ingestion rate.";
+                    return false;
+                }
+
+                if (_orderConfig.IngestionRate > 1000)
+                {
+                    result = "Please specify a valid ingestion rate(cannot process to many orders).";
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex);
+                result = $"Failed to load config file :{ex.Message}";
                 return false;
             }
         }
 
-        public static List<Order> GetOrders(string orderPath = "./config/orders.json")
+        public static List<Order> LoadOrders(string orderPath)
         {
             try
             {
