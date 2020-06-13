@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
-// File Name   : Kitchencs
+// File Name   : Kitchen
 // Author      : junlei
-// Date        : 6/11/2020 6:20:32 PM
+// Date        : 6/13/2020 6:20:32 PM
 // Description : 
 // Version     : 1.0.0      
 // Updated     : 
@@ -13,15 +13,17 @@ using System.Text;
 
 namespace OrderSimulation.Handler
 {
-    class Kitchen
+    public class Kitchen
     {
+        public event Action<Order> OnOrderReady2Delivery;
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<Temperature, Shelf> _shelfDic = new Dictionary<Temperature, Shelf> {
-            {Temperature.Hot,    new Shelf("Hot",10) },
-            {Temperature.Cold,   new Shelf("Cold", 10) },
-            {Temperature.Frozen, new Shelf("Frozen", 10) },
-            {Temperature.Otehrs, new Shelf("Overflow", 15) },
+        private readonly Dictionary<ShelfType, Shelf> _shelfDic = new Dictionary<ShelfType, Shelf> {
+            {ShelfType.Hot,    new Shelf(ShelfType.Hot,10) },
+            {ShelfType.Cold,   new Shelf(ShelfType.Cold, 10) },
+            {ShelfType.Frozen, new Shelf(ShelfType.Frozen, 10) },
+            {ShelfType.Overflow, new Shelf(ShelfType.Overflow, 15) },
         };
 
         public Kitchen()
@@ -30,60 +32,45 @@ namespace OrderSimulation.Handler
 
         internal void ReceiveOrder(Order order)
         {
-            Logger.Info($"Order received: {order.Name}-{order.Value}.");
-            order.OnDie += Order_OnDie;
-            if (HandleOrder(order))
-            {
-                Logger.Info($"Order processed: {order.Name}-{order.Value}.");
-            }
-            else
-            {
-                Logger.Warn($"Order discarded: {order.Name}-{order.Value}.");
-            }
-        }
+            Logger.Info($"Order received/processed: {order.Name}-{order.Value}.");
 
-        private bool HandleOrder(Order order)
-        {
-            if (!_shelfDic.ContainsKey(order.Temperature))
+            if (!_shelfDic.ContainsKey(order.ShelfType))
             {
-                Logger.Warn($"Order not valid: {order.Name}-{order.Temperature}-{order.ID}");
-                return false;
+                Logger.Warn($"Order not valid: {order.Name}-{order.ShelfType}-{order.ID}");
+                return;
             }
 
-            if (_shelfDic[order.Temperature].Place(order))
+            // place the original shelf, if full place overflow
+            if (_shelfDic[order.ShelfType].Place(order))
             {
-                Console.WriteLine("Shelves' info: \r\n" + GetShelvesInfo());
-                return true;
+                Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
+                OnOrderReady2Delivery?.Invoke(order);
+                return;
             }
 
             //overflow shelf
-            if (_shelfDic[Temperature.Otehrs].Place(order, true))
-            {
-                Console.WriteLine("Shelves' info: \r\n" + GetShelvesInfo());
-                return true;
-            }
-
-            return false;
+            _shelfDic[ShelfType.Overflow].Place(order, true);
+            Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
+            OnOrderReady2Delivery?.Invoke(order);
         }
 
-        internal bool AssignCourier(Order order) // and delivery
+        internal bool IsEmpty()
         {
-            if (order.Value <= 0) // order die
+            int count = 0;
+            foreach (var shelf in _shelfDic.Values)
             {
-                return false;
+                count += shelf.Count;
             }
 
-            order.OnDie -= Order_OnDie;
-            _shelfDic[order.Temperature].Remove(order);
-            Logger.Info($"Order delivered: {order.Name}-{order.Value}");
-
-            return true;
+            return count == 0;
         }
 
-        private void Order_OnDie(Order order)
+        internal void Deliver(Order order)
         {
-            Logger.Warn($"Order dies: {order.Name}-{order.Value}");
-            _shelfDic[order.Temperature].Remove(order);
+            if (_shelfDic[order.ActuallyPlacedShelfType].Remove(order))
+            {
+                Logger.Info($"Order delivered: {order.Name}-{order.Value}");
+            }
         }
 
         private string GetShelvesInfo()

@@ -1,16 +1,16 @@
 ﻿//-----------------------------------------------------------------------------
 // File Name   : Config
 // Author      : junlei
-// Date        : 6/12/2020 3:39:40 PM
+// Date        : 6/13/2020 3:39:40 PM
 // Description : 
 // Version     : 1.0.0      
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
 
-namespace OrderSimulation.Handler
+namespace OrderSimulation.Config
 {
-    class OrderConfig
+    public class OrderConfig
     {
         public int IngestionRate { get; set; }
     }

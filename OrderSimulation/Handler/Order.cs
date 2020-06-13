@@ -1,45 +1,48 @@
 ﻿//-----------------------------------------------------------------------------
 // File Name   : Order
 // Author      : junlei
-// Date        : 6/11/2020 6:20:51 PM
+// Date        : 6/13/2020 6:20:51 PM
 // Description : 
 // Version     : 1.0.0      
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
-using System.Runtime.Serialization;
 using System.Timers;
 
 namespace OrderSimulation.Handler
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum Temperature
-    {
-        [EnumMember(Value = "others")]
-        Otehrs = 0,
-        [EnumMember(Value = "hot")]
-        Hot = 1,
-        [EnumMember(Value = "cold")]
-        Cold = 2,
-        [EnumMember(Value = "frozen")]
-        Frozen = 3,
-    };
-
     public class Order
     {
         [JsonProperty("id")]
         public string ID { get; set; }
         [JsonProperty("name")]
         public string Name { get; set; }
-        [JsonProperty("temp")]
-        public Temperature Temperature { get; set; }
+
         [JsonProperty("shelfLife")]
         public int ShelfLife { get; set; }
         [JsonProperty("decayRate")]
         public decimal DecayRate { get; set; }
+
+        private ShelfType _shelfType;
+        [JsonProperty("temp")]
+        public ShelfType ShelfType
+        {
+            get { return _shelfType; }
+            set
+            {
+                _shelfType = value;
+                _shelfDecayModifier = (_shelfType == ShelfType.Cold
+                    || ShelfType == ShelfType.Hot
+                    || ShelfType == ShelfType.Frozen) ? 1 : 2;
+            }
+        }
+
+        public ShelfType ActuallyPlacedShelfType { get; set; }
+        public bool CourierAssigned { get; set; } = false;
+
+        private int _shelfDecayModifier;
 
         public decimal Value
         {
@@ -50,29 +53,32 @@ namespace OrderSimulation.Handler
                     return 0;
                 }
 
-                return (ShelfLife - DecayRate * _age * ShelfDecayModifier) / ShelfLife;
+                return (ShelfLife - DecayRate * _age * _shelfDecayModifier) / ShelfLife;
             }
         }
 
-        private int ShelfDecayModifier => (Temperature == Temperature.Cold || Temperature == Temperature.Hot
-                                        || Temperature == Temperature.Frozen) ? 1 : 2;
-
         public event Action<Order> OnDie;
+        public bool IsLive { get; private set; } = false;
 
         private int _age = 0; // by seconds
-        internal void Start()
+        private readonly Timer _growTimer = new Timer();
+        internal void Start()  // order is born an starts to grow
         {
-            var timer = new Timer();
-            timer.Elapsed += GrowUp;
-            timer.Interval = 1000;
-            timer.Start();
+            _growTimer.Elapsed += GrowUp;
+            _growTimer.Interval = 1000;
+            _growTimer.Start();
+            IsLive = true;
         }
 
         private void GrowUp(object sender, ElapsedEventArgs e)
         {
             ++_age;
-            if (Value <= 0) // die
+            if (decimal.Compare(Value, 0) <= 0) // die
             {
+                _growTimer.Stop();
+                _growTimer.Elapsed -= GrowUp;
+                IsLive = false;
+
                 OnDie?.Invoke(this);
             }
         }

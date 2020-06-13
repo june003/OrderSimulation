@@ -1,13 +1,14 @@
 ﻿//-----------------------------------------------------------------------------
 // File Name   : OrderHandler
 // Author      : junlei
-// Date        : 6/12/2020 3:43:05 PM
+// Date        : 6/13/2020 3:43:05 PM
 // Description : 
 // Version     : 1.0.0      
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
 using Newtonsoft.Json;
+using OrderSimulation.Config;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,23 +16,22 @@ using System.Threading.Tasks;
 
 namespace OrderSimulation.Handler
 {
-    class OrderHandler
+    public class OrderHandler
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
-        private OrderConfig _orderConfig;
-        private readonly Kitchen _kitchen = new Kitchen();
-
         private static readonly Random _rand = new Random();
 
-        public OrderHandler()
+        private readonly string _configPath;
+        private OrderConfig _orderConfig;
+        private readonly Kitchen _kitchen = new Kitchen();
+        public OrderHandler(string configPath)
         {
-
+            _configPath = configPath;
         }
 
-        internal bool ProcessOrders(List<Order> orders)
+        public bool ProcessOrders(List<Order> orders)
         {
-            if (!string.IsNullOrEmpty(LoadConfig("./config/config.json")))
+            if (!LoadConfig(_configPath))
             {
                 Logger.Error("Failed to load config file.");
                 return false;
@@ -39,31 +39,57 @@ namespace OrderSimulation.Handler
 
             foreach (var ord in orders)
             {
-                ord.Start(); // order starts from here
+                ord.Start(); // order is born
 
-                Task.Run(() => ProcessOrders(ord)).ConfigureAwait(false); // new thread for kitchen
-                Task.Run(() => AssignCourier(ord)).ConfigureAwait(false);  // new thread for Courier
+                ProcessOrder(ord);     // new thread for kitchen
+                CallCourier(ord);  // new thread for Courier
 
                 Task.Delay(1000 / _orderConfig.IngestionRate).Wait();
+            }
+
+            while (!_kitchen.IsEmpty())  // all orders processed
+            {
+                Task.Delay(100).Wait();
             }
 
             return true;
         }
 
-        private void ProcessOrders(Order order)  // received and processed
+        private void ProcessOrder(Order order)
         {
-            _kitchen.ReceiveOrder(order);// new thread for kitchen
+            Task.Run(() =>
+            {
+                _kitchen.OnOrderReady2Delivery += Kitchen_OrderReady2Delivery;
+                _kitchen.ReceiveOrder(order);
+            });
         }
 
-        private void AssignCourier(Order order)
+        private void Kitchen_OrderReady2Delivery(Order order)
         {
-            var delay = _rand.Next(2, 6);
-            Logger.Info($"Courier comes {delay}' later");
-            Task.Delay(delay * 1000).Wait(); // courier comes 2~6s later
-            _kitchen.AssignCourier(order);
+            while (!order.CourierAssigned)  // waiting for courier 
+            {
+                Task.Delay(20).Wait();
+            }
+
+            if (order.IsLive)
+            {
+                _kitchen.Deliver(order);
+            }
         }
 
-        private string LoadConfig(string path)
+        private void CallCourier(Order order)
+        {
+            Task.Run(() =>
+            {
+                var delay = _rand.Next(2, 7);
+                Logger.Info($"Courier comes {delay}\" later."); // 2~6" later
+                Task.Delay(delay * 1000).Wait();
+
+                order.CourierAssigned = true;
+            });
+        }
+
+        private bool LoadConfig(string path)
         {
             try
             {
@@ -72,20 +98,22 @@ namespace OrderSimulation.Handler
 
                 if (_orderConfig.IngestionRate <= 0)
                 {
-                    return "Please specify a valid ingestion rate.";
+                    Logger.Error("Please specify a valid ingestion rate: (0, 1000].");
+                    return false;
                 }
 
                 if (_orderConfig.IngestionRate > 1000)
                 {
-                    return "Please specify a valid ingestion rate(cannot process to many orders).";
+                    Logger.Error("Please specify a valid ingestion rate(cannot process to many orders): (0, 1000].");
+                    return false;
                 }
 
-                return string.Empty;
+                return true;
             }
             catch (Exception ex)
             {
-                Logger.Error(ex);
-                return $"Failed to load config file :{ex.Message}";
+                Logger.Error($"Failed to load config file :{ex.Message}");
+                return false;
             }
         }
 
