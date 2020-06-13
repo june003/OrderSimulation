@@ -1,5 +1,6 @@
 ﻿using OrderSimulation.Handler;
 using System;
+using System.Threading.Tasks;
 
 namespace OrderSimulation
 {
@@ -15,9 +16,11 @@ namespace OrderSimulation
                 var orders = OrderHandler.LoadOrders("./config/orders.json");
 
                 var handler = new OrderHandler();
-                if (!handler.ProcessOrders(orders, out string result))
+                var rlt = handler.ProcessOrders(orders);
+                if (!rlt)
                 {
-                    Logger.Error(result);
+                    Logger.Error("Error happens when processing orders");
+                    return;
                 }
             }
             catch (Exception ex)

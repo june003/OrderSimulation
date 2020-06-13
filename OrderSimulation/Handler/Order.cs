@@ -9,8 +9,9 @@
 //-----------------------------------------------------------------------------
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
+using System.Timers;
 
 namespace OrderSimulation.Handler
 {
@@ -56,21 +57,23 @@ namespace OrderSimulation.Handler
         private int ShelfDecayModifier => (Temperature == Temperature.Cold || Temperature == Temperature.Hot
                                         || Temperature == Temperature.Frozen) ? 1 : 2;
 
-        public Shelf Shelf { get; internal set; }
-        internal Courier Courier { get; set; }
+        public event Action<Order> OnDie;
 
         private int _age = 0; // by seconds
         internal void Start()
         {
-            Task.Run(() => Grow()).ConfigureAwait(false);
+            var timer = new Timer();
+            timer.Elapsed += GrowUp;
+            timer.Interval = 1000;
+            timer.Start();
         }
 
-        private void Grow()
+        private void GrowUp(object sender, ElapsedEventArgs e)
         {
-            while (true)
+            ++_age;
+            if (Value <= 0) // die
             {
-                Task.Delay(1000).Wait();
-                ++_age;
+                OnDie?.Invoke(this);
             }
         }
     }

@@ -21,16 +21,19 @@ namespace OrderSimulation.Handler
 
         private OrderConfig _orderConfig;
         private readonly Kitchen _kitchen = new Kitchen();
+
+        private static readonly Random _rand = new Random();
+
         public OrderHandler()
         {
 
         }
 
-        internal bool ProcessOrders(List<Order> orders, out string result)
+        internal bool ProcessOrders(List<Order> orders)
         {
-            if (!LoadConfig("./config/config.json", out result))
+            if (!string.IsNullOrEmpty(LoadConfig("./config/config.json")))
             {
-                result = "Failed to load config file.";
+                Logger.Error("Failed to load config file.");
                 return false;
             }
 
@@ -38,9 +41,8 @@ namespace OrderSimulation.Handler
             {
                 ord.Start(); // order starts from here
 
-                Task.Run(() => _kitchen.ReceiveOrder(ord)).ConfigureAwait(false); // new thread for kitchen
-
-                Task.Run(() => Pickup(ord)).ConfigureAwait(false);  // new thread for Courier
+                Task.Run(() => ProcessOrders(ord)).ConfigureAwait(false); // new thread for kitchen
+                Task.Run(() => AssignCourier(ord)).ConfigureAwait(false);  // new thread for Courier
 
                 Task.Delay(1000 / _orderConfig.IngestionRate).Wait();
             }
@@ -48,38 +50,42 @@ namespace OrderSimulation.Handler
             return true;
         }
 
-        private void Pickup(Order order)
+        private void ProcessOrders(Order order)  // received and processed
         {
-            var courier = new Courier();
-            courier.Pickup(order);
+            _kitchen.ReceiveOrder(order);// new thread for kitchen
         }
 
-        private bool LoadConfig(string path, out string result)
+        private void AssignCourier(Order order)
         {
-            result = string.Empty;
+            var delay = _rand.Next(2, 6);
+            Logger.Info($"Courier comes {delay}' later");
+            Task.Delay(delay * 1000).Wait(); // courier comes 2~6s later
+            _kitchen.AssignCourier(order);
+        }
+
+        private string LoadConfig(string path)
+        {
             try
             {
+                Logger.Info("Loading configuration...");
                 _orderConfig = JsonConvert.DeserializeObject<OrderConfig>(File.ReadAllText(path));
 
                 if (_orderConfig.IngestionRate <= 0)
                 {
-                    result = "Please specify a valid ingestion rate.";
-                    return false;
+                    return "Please specify a valid ingestion rate.";
                 }
 
                 if (_orderConfig.IngestionRate > 1000)
                 {
-                    result = "Please specify a valid ingestion rate(cannot process to many orders).";
-                    return false;
+                    return "Please specify a valid ingestion rate(cannot process to many orders).";
                 }
 
-                return true;
+                return string.Empty;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                result = $"Failed to load config file :{ex.Message}";
-                return false;
+                return $"Failed to load config file :{ex.Message}";
             }
         }
 
@@ -87,6 +93,7 @@ namespace OrderSimulation.Handler
         {
             try
             {
+                Logger.Info("Loading orders...");
                 return JsonConvert.DeserializeObject<List<Order>>(File.ReadAllText(orderPath));
             }
             catch (Exception ex)

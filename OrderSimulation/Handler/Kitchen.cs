@@ -7,7 +7,9 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace OrderSimulation.Handler
 {
@@ -16,10 +18,10 @@ namespace OrderSimulation.Handler
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<Temperature, Shelf> _shelfDic = new Dictionary<Temperature, Shelf> {
-            {Temperature.Hot,    new Shelf(10) },
-            {Temperature.Cold,   new Shelf(10) },
-            {Temperature.Frozen, new Shelf(10) },
-            {Temperature.Otehrs, new Shelf(15) },
+            {Temperature.Hot,    new Shelf("Hot",10) },
+            {Temperature.Cold,   new Shelf("Cold", 10) },
+            {Temperature.Frozen, new Shelf("Frozen", 10) },
+            {Temperature.Otehrs, new Shelf("Overflow", 15) },
         };
 
         public Kitchen()
@@ -28,35 +30,71 @@ namespace OrderSimulation.Handler
 
         internal void ReceiveOrder(Order order)
         {
-            HandleOrder(order);
-
-            Logger.Info($"Order {order.ID}:{order.Value} was processed.");
+            Logger.Info($"Order received: {order.Name}-{order.Value}.");
+            order.OnDie += Order_OnDie;
+            if (HandleOrder(order))
+            {
+                Logger.Info($"Order processed: {order.Name}-{order.Value}.");
+            }
+            else
+            {
+                Logger.Warn($"Order discarded: {order.Name}-{order.Value}.");
+            }
         }
 
         private bool HandleOrder(Order order)
         {
             if (!_shelfDic.ContainsKey(order.Temperature))
             {
-                Logger.Warn($"Order temperature is not valid: {order.ID}:{order.Value}");
+                Logger.Warn($"Order not valid: {order.Name}-{order.Temperature}-{order.ID}");
+                return false;
+            }
+
+            if (_shelfDic[order.Temperature].Place(order))
+            {
+                Console.WriteLine("Shelves' info: \r\n" + GetShelvesInfo());
                 return true;
             }
 
-            var oriShelf = _shelfDic[order.Temperature];
-            if (oriShelf.Place(order))
+            //overflow shelf
+            if (_shelfDic[Temperature.Otehrs].Place(order, true))
             {
-                Logger.Info($"Placed order: {order.ID}:{order.Value}");
-                return true;
-            }
-
-            var overflowShelf = _shelfDic[Temperature.Otehrs];
-            if (overflowShelf.Place(order))
-            {
-                Logger.Info($"Placed order: {order.ID}:{order.Value}");
+                Console.WriteLine("Shelves' info: \r\n" + GetShelvesInfo());
                 return true;
             }
 
             return false;
         }
 
+        internal bool AssignCourier(Order order) // and delivery
+        {
+            if (order.Value <= 0) // order die
+            {
+                return false;
+            }
+
+            order.OnDie -= Order_OnDie;
+            _shelfDic[order.Temperature].Remove(order);
+            Logger.Info($"Order delivered: {order.Name}-{order.Value}");
+
+            return true;
+        }
+
+        private void Order_OnDie(Order order)
+        {
+            Logger.Warn($"Order dies: {order.Name}-{order.Value}");
+            _shelfDic[order.Temperature].Remove(order);
+        }
+
+        private string GetShelvesInfo()
+        {
+            var builder = new StringBuilder();
+            foreach (var shf in _shelfDic.Values)
+            {
+                builder.AppendLine($"  {shf.GetInfo()}");
+            }
+
+            return builder.ToString();
+        }
     }
 }
