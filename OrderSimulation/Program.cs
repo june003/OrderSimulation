@@ -7,9 +7,9 @@
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
+using OrderSimulation.Config;
 using OrderSimulation.Handler;
 using System;
-using System.Threading.Tasks;
 
 namespace OrderSimulation
 {
@@ -17,29 +17,28 @@ namespace OrderSimulation
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        static  void  Main(string[] args)
+        static void Main(string[] args)
         {
             Logger.Info("Start...");
             try
             {
                 var orders = OrderHandler.LoadOrders("./config/orders.json");
+                var config = OrderConfig.LoadConfig("./config/config.json");
 
-                var handler = new OrderHandler("./config/config.json");
-                var rlt =  handler.ProcessOrders(orders);
-                if (!rlt)
-                {
-                    Logger.Error("Error happens when processing orders");
-                    return;
-                }
+                var eve = new EventAggregator(config);
+                var pub = new Publisher(eve);
+                var kitchenHandler = new KitchenHandler(eve);
+                var courierHandler = new CourierHandler(eve);
+
+                pub.Publish(orders);
+
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Logger.Error(ex);
                 return;
             }
-
-            Logger.Info("Done!");
-            Console.ReadKey();
         }
     }
 }
