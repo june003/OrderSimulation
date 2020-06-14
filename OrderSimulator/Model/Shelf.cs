@@ -21,14 +21,15 @@ namespace OrderSimulation.Model
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ShelfType
     {
-        [EnumMember(Value = "overflow")]
-        Overflow = 0,
+        Invalid = 0,
         [EnumMember(Value = "hot")]
         Hot = 1,
         [EnumMember(Value = "cold")]
         Cold = 2,
         [EnumMember(Value = "frozen")]
         Frozen = 3,
+        [EnumMember(Value = "overflow")]
+        Overflow = 4,
     };
 
     /// <summary>
@@ -83,6 +84,11 @@ namespace OrderSimulation.Model
 
                 return true;
             }
+        }
+
+        internal bool Contains(Order order)
+        {
+            return _orders.ContainsKey(order);
         }
 
         internal void Remove(Order order)

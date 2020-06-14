@@ -66,7 +66,7 @@ namespace OrderSimulation.Model
 
         private int _age = 0; // by seconds
         private readonly Timer _growTimer = new Timer();
-        internal void Start()  // order is born an starts to grow
+        public void Start()  // order is born an starts to grow
         {
             _growTimer.Elapsed += GrowUp;
             _growTimer.Interval = 1000;

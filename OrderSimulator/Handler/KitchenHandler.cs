@@ -31,7 +31,7 @@ namespace OrderSimulation.Handler
         private readonly object _lockObj = new object();
         public KitchenHandler(OrderHandler orderHandler)
         {
-            orderHandler.Subscribe(this);
+            orderHandler?.Subscribe(this);
         }
 
         public void Process(Order order)
@@ -58,6 +58,20 @@ namespace OrderSimulation.Handler
 
                 Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
             }
+        }
+
+        public ShelfType GetShelfOf(Order order)
+        {
+            if (_shelfDic[order.ShelfType].Contains(order))
+            {
+                return order.ShelfType;
+            }
+            else if (_shelfDic[ShelfType.Overflow].Contains(order))
+            {
+                return ShelfType.Overflow;
+            }
+
+            return ShelfType.Invalid;
         }
 
         public string GetShelvesInfo()

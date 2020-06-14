@@ -23,7 +23,7 @@ namespace OrderSimulation.Handler
         private static readonly Random _rand = new Random();
         public CourierHandler(OrderHandler orderHandler)
         {
-            orderHandler.Subscribe(this);
+            orderHandler?.Subscribe(this);
         }
 
         // create thread in the thread pool
