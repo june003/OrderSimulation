@@ -49,6 +49,9 @@ namespace OrderSimulation.Model
 
         private int _shelfDecayModifier;
 
+        /// <summary>
+        /// order deteriorates with time, and Value becomes less
+        /// </summary>
         public decimal Value
         {
             get
@@ -62,7 +65,7 @@ namespace OrderSimulation.Model
             }
         }
 
-        public event Action<Order, bool> OnFinish;
+        public event Action<Order, bool> OnFinish;  // decay? delivered? or discarded randomly?
 
         private int _age = 0; // by seconds
         private readonly Timer _growTimer = new Timer();
@@ -83,7 +86,7 @@ namespace OrderSimulation.Model
 
                 OnFinish?.Invoke(this, false);
             }
-            else if (CourierAssigned)  // delivered
+            else if (CourierAssigned)  // courier comes for delivery
             {
                 _growTimer.Stop();
                 _growTimer.Elapsed -= GrowUp;

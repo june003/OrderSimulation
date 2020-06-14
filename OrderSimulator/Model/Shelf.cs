@@ -33,7 +33,7 @@ namespace OrderSimulation.Model
     };
 
     /// <summary>
-    /// shelf information
+    /// shelf details
     /// </summary>
     internal class Shelf
     {

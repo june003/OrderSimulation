@@ -21,8 +21,8 @@ namespace OrderSimulation
 
             var handler = new OrderHandler(config);
             var pub = new Publisher(handler);
-            var kitchenHandler = new KitchenHandler(handler);  // subscriber
-            var courierHandler = new CourierHandler(handler);  // subscriber
+            var kitchenHandler = new KitchenHandler(handler);  // subscriber 1
+            var courierHandler = new CourierHandler(handler);  // subscriber 2
 
             var orders = OrderConfig.LoadOrders("./config/orders.json");
             pub.Publish(orders);

@@ -24,6 +24,10 @@ namespace OrderSimulation.Handler
             _orderHandler = handler;
         }
 
+        /// <summary>
+        /// starts here
+        /// </summary>
+        /// <param name="orders"></param>
         public void Publish(List<Order> orders)
         {
             var ingestRate = _orderHandler.Config.IngestionRate;

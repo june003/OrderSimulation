@@ -12,7 +12,7 @@ using OrderSimulation.Model;
 namespace OrderSimulation.Handler
 {
     /// <summary>
-    /// may has many subscibers to handle the order
+    /// interface: may has many subscibers to handle the orders
     /// </summary>
     public interface ISubscriber
     {

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace OrderSimulation.Handler
 {
     /// <summary>
-    /// the simlified courier, which comes later(order is ready) to wait for the cooked order
+    /// the simlified courier, which comes later(order is ready) to wait for the cooked orders
     /// </summary>
     public class CourierHandler : ISubscriber
     {
@@ -32,8 +32,8 @@ namespace OrderSimulation.Handler
             await Task.Run(async () =>
             {
                 var delay = _rand.Next(2, 7);
-                Logger.Info($"Courier comes {delay}s later for order {order.Name}-{order.Value}."); // 2~6" later                
-                await Task.Delay(delay * 1000);
+                Logger.Info($"Courier comes {delay}s later for order {order.Name}-{order.Value}.");
+                await Task.Delay(delay * 1000);  // 2~6" later
 
                 order.CourierAssigned = true;
             });
