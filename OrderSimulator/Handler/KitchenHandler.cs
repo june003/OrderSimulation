@@ -60,7 +60,7 @@ namespace OrderSimulation.Handler
             }
         }
 
-        private string GetShelvesInfo()
+        public string GetShelvesInfo()
         {
             var builder = new StringBuilder();
             foreach (var shf in _shelfDic.Values)

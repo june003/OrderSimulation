@@ -9,22 +9,17 @@ namespace OrderSimUT
 {
     public class OrderSimT
     {
-        List<Order> _orders;
-        OrderConfig _config;
-
-        Order _order;
-
         [SetUp]
         public void Setup()
         {
-            _orders = OrderConfig.LoadOrders("./config/orders.json");
-            _config = OrderConfig.LoadConfig("./config/config.json");
+            var _orders = OrderConfig.LoadOrders("./config/orders.json");
+            var _config = OrderConfig.LoadConfig("./config/config.json");
         }
 
         [Test]
-        public void TestOrder()
+        public void TestDelivery()
         {
-            Assert.IsTrue(_orders.Count > 0);
+            //Assert.IsTrue(_orders.Count > 0);
 
             Assert.Pass();
         }
@@ -38,7 +33,27 @@ namespace OrderSimUT
                 ID = "9012736d-777b-4f5b-a12d-982e302fefa1",
                 Name = "Mixed Greens",
                 ShelfType = ShelfType.Cold,
-                ShelfLife = 252,
+                ShelfLife = 500,
+                DecayRate = (decimal)0.26
+            };
+
+            var handler = new KitchenHandler(null);
+            handler.Process(order);
+
+            Assert.Pass();
+        }
+
+
+
+        [Test]
+        public void Decay()
+        {
+            var order = new Order
+            {
+                ID = "9012736d-777b-4f5b-a12d-982e302fefa1",
+                Name = "Mixed Greens",
+                ShelfType = ShelfType.Cold,
+                ShelfLife = 10,
                 DecayRate = (decimal)0.26
             };
 

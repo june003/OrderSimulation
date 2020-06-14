@@ -29,7 +29,7 @@ namespace OrderSimulation.Handler
             var ingestRate = _orderHandler.Config.IngestionRate;
             foreach (var ord in orders)
             {
-                ord.Start();
+                ord.Start();  // order was born
                 _orderHandler.Publish(ord);
 
                 Task.Delay(1000 / ingestRate).Wait();

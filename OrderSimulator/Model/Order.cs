@@ -42,6 +42,9 @@ namespace OrderSimulation.Model
             }
         }
 
+        /// <summary>
+        /// if the courier is ready
+        /// </summary>
         public bool CourierAssigned { get; set; } = false;
 
         private int _shelfDecayModifier;
