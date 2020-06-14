@@ -13,6 +13,9 @@ using System.Timers;
 
 namespace OrderSimulation.Model
 {
+    /// <summary>
+    /// order information 
+    /// </summary>
     public class Order
     {
         [JsonProperty("id")]

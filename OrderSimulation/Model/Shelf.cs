@@ -34,7 +34,7 @@ namespace OrderSimulation.Model
     /// <summary>
     /// shelf information
     /// </summary>
-    public class Shelf
+    internal class Shelf
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -71,15 +71,15 @@ namespace OrderSimulation.Model
                         return false;
                     }
 
-                    // for overflow shelf
+                    // for overflow shelf, discard random order first 
                     var randOrder = _orders.ElementAt(_rand.Next(_orders.Count)).Key;
                     _ = _orders.TryRemove(randOrder, out byte val);
-                    Logger.Info($"Order discarded randomly: {randOrder.Name}-{randOrder.Value}-{randOrder.ShelfType}");
+                    Logger.Info($"Order discarded randomly: {randOrder.Name}-{randOrder.Value}");
                 }
 
                 _ = _orders.TryAdd(order, 0);
                 order.OnFinish += Order_OnFinish;
-                Logger.Info($"Order received/processed/placed: {order.Name}-{order.ShelfType}-{order.Value} on shelf: {_name}");
+                Logger.Info($"Order received/processed/placed: {order.Name}-{order.Value}-{order.ShelfType} on shelf: {_name}");
 
                 return true;
             }

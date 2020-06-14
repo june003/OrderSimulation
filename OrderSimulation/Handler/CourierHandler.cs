@@ -27,13 +27,13 @@ namespace OrderSimulation.Handler
         }
 
         // create thread in the thread pool
-        public void Process(Order order)
+        public async void Process(Order order)
         {
-            Task.Run(() =>
+            await Task.Run(async () =>
             {
                 var delay = _rand.Next(2, 7);
                 Logger.Info($"Courier comes {delay}\" later for order {order.Name}-{order.Name}."); // 2~6" later                
-                Task.Delay(delay * 1000).Wait();
+                await Task.Delay(delay * 1000);
 
                 order.CourierAssigned = true;
             });

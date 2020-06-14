@@ -39,7 +39,7 @@ namespace OrderSimulation.Handler
             Task.Run(() => ReceiveOrder(order));  // create thread in the thread pool
         }
 
-        internal void ReceiveOrder(Order order)
+        private void ReceiveOrder(Order order)
         {
             if (!_shelfDic.ContainsKey(order.ShelfType))
             {
@@ -49,15 +49,13 @@ namespace OrderSimulation.Handler
 
             lock (_lockObj)
             {
-                // place the original shelf, if full place overflow
-                if (_shelfDic[order.ShelfType].Place(order))
+                // place the original shelf, if full, then place overflow
+                if (!_shelfDic[order.ShelfType].Place(order))
                 {
-                    Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
-                    return;
+                    //overflow shelf
+                    _shelfDic[ShelfType.Overflow].Place(order, true);
                 }
 
-                //overflow shelf
-                _shelfDic[ShelfType.Overflow].Place(order, true);
                 Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
             }
         }
