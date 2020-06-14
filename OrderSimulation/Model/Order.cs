@@ -39,7 +39,6 @@ namespace OrderSimulation.Model
             }
         }
 
-        public ShelfType ActuallyPlacedShelfType { get; set; }
         public bool CourierAssigned { get; set; } = false;
 
         private int _shelfDecayModifier;
@@ -57,8 +56,7 @@ namespace OrderSimulation.Model
             }
         }
 
-        public event Action<Order, bool> OnDie;
-        public bool IsLive { get; private set; } = false;
+        public event Action<Order, bool> OnFinish;
 
         private int _age = 0; // by seconds
         private readonly Timer _growTimer = new Timer();
@@ -67,19 +65,24 @@ namespace OrderSimulation.Model
             _growTimer.Elapsed += GrowUp;
             _growTimer.Interval = 1000;
             _growTimer.Start();
-            IsLive = true;
         }
 
         private void GrowUp(object sender, ElapsedEventArgs e)
         {
             ++_age;
-            if (decimal.Compare(Value, 0) <= 0 || CourierAssigned) // died or delivered
+            if (decimal.Compare(Value, 0) <= 0) // decayed
             {
                 _growTimer.Stop();
                 _growTimer.Elapsed -= GrowUp;
-                IsLive = false;
 
-                OnDie?.Invoke(this, CourierAssigned);
+                OnFinish?.Invoke(this, false);
+            }
+            else if (CourierAssigned)  // delivered
+            {
+                _growTimer.Stop();
+                _growTimer.Elapsed -= GrowUp;
+
+                OnFinish?.Invoke(this, true);
             }
         }
     }

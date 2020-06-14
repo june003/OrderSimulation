@@ -14,6 +14,9 @@ using System.Threading.Tasks;
 
 namespace OrderSimulation.Handler
 {
+    /// <summary>
+    /// kitchen subscriber handles the order(cook/place in the shelf)
+    /// </summary>
     public class KitchenHandler : ISubscriber
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -25,16 +28,15 @@ namespace OrderSimulation.Handler
             {ShelfType.Overflow, new Shelf(ShelfType.Overflow, 15) },
         };
 
-        public KitchenHandler(EventAggregator eventAggregator)
+        private readonly object _lockObj = new object();
+        public KitchenHandler(OrderHandler orderHandler)
         {
-            eventAggregator.Subscribe<Order>(ProcessOrder);
+            orderHandler.Subscribe(this);
         }
 
-        //public event Action<Order> OnDelivery;
-        public void ProcessOrder(Order order)
+        public void Process(Order order)
         {
-            Task.Run(() => ReceiveOrder(order));
-            //_eventAggregator.UnSbscribe(_myMessageToken);
+            Task.Run(() => ReceiveOrder(order));  // create thread in the thread pool
         }
 
         internal void ReceiveOrder(Order order)
@@ -45,23 +47,18 @@ namespace OrderSimulation.Handler
                 return;
             }
 
-            // place the original shelf, if full place overflow
-            if (_shelfDic[order.ShelfType].Place(order))
+            lock (_lockObj)
             {
+                // place the original shelf, if full place overflow
+                if (_shelfDic[order.ShelfType].Place(order))
+                {
+                    Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
+                    return;
+                }
+
+                //overflow shelf
+                _shelfDic[ShelfType.Overflow].Place(order, true);
                 Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
-                return;
-            }
-
-            //overflow shelf
-            _shelfDic[ShelfType.Overflow].Place(order, true);
-            Logger.Info("Shelves' info: \r\n" + GetShelvesInfo());
-        }
-
-        internal void Deliver(Order order)
-        {
-            if (_shelfDic[order.ActuallyPlacedShelfType].Remove(order))
-            {
-                Logger.Info($"Order delivered: {order.Name}-{order.Value}");
             }
         }
 

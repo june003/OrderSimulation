@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// File Name   : Kitchencs
+// File Name   : Program
 // Author      : junlei
 // Date        : 6/13/2020 6:12:12 PM
 // Description : 
@@ -22,14 +22,14 @@ namespace OrderSimulation
             Logger.Info("Start...");
             try
             {
-                var orders = OrderHandler.LoadOrders("./config/orders.json");
                 var config = OrderConfig.LoadConfig("./config/config.json");
 
-                var eve = new EventAggregator(config);
-                var pub = new Publisher(eve);
-                var kitchenHandler = new KitchenHandler(eve);
-                var courierHandler = new CourierHandler(eve);
+                var handler = new OrderHandler(config);
+                var pub = new Publisher(handler);
+                var kitchenHandler = new KitchenHandler(handler);
+                var courierHandler = new CourierHandler(handler);
 
+                var orders = OrderConfig.LoadOrders("./config/orders.json");
                 pub.Publish(orders);
 
                 Console.ReadKey();

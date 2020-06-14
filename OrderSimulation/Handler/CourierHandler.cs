@@ -13,17 +13,21 @@ using System.Threading.Tasks;
 
 namespace OrderSimulation.Handler
 {
+    /// <summary>
+    /// the simlified courier, which comes later(order is ready) to wait for the cooked order
+    /// </summary>
     public class CourierHandler : ISubscriber
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private static readonly Random _rand = new Random();
-        public CourierHandler(EventAggregator eventAggregator)
+        public CourierHandler(OrderHandler orderHandler)
         {
-            eventAggregator.Subscribe<Order>(ProcessOrder);
+            orderHandler.Subscribe(this);
         }
 
-        public void ProcessOrder(Order order)
+        // create thread in the thread pool
+        public void Process(Order order)
         {
             Task.Run(() =>
             {
@@ -33,8 +37,6 @@ namespace OrderSimulation.Handler
 
                 order.CourierAssigned = true;
             });
-
-            //_eventAggregator.UnSbscribe(_myMessageToken);
         }
     }
 }

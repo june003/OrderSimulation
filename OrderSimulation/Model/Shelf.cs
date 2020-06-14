@@ -31,18 +31,21 @@ namespace OrderSimulation.Model
         Frozen = 3,
     };
 
+    /// <summary>
+    /// shelf information
+    /// </summary>
     public class Shelf
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
-        public int Count => _orders.Count;
 
         private readonly int _capacity;
         private readonly ShelfType _name;
 
         private readonly Random _rand = new Random();
+        private readonly object _lockObj = new object();
 
-        // keys are used here only here to replace for threadsafe HashSet 
+        //private readonly HashSet<Order> _orders = new HashSet<Order>();  // not thread safe
+        // use the threadsafe concurrent dictioary
         private readonly ConcurrentDictionary<Order, byte> _orders = new ConcurrentDictionary<Order, byte>();
 
         public Shelf(ShelfType name, int capacity)
@@ -51,7 +54,6 @@ namespace OrderSimulation.Model
             _capacity = capacity;
         }
 
-        private readonly object _lock = new object();
         /// <summary>
         /// place on the shelf
         /// </summary>
@@ -60,7 +62,7 @@ namespace OrderSimulation.Model
         /// <returns>true if successfully</returns>
         internal bool Place(Order order, bool forceTo = false)
         {
-            lock (_lock)
+            lock (_lockObj)
             {
                 if (_orders.Count >= _capacity) // full
                 {
@@ -75,40 +77,36 @@ namespace OrderSimulation.Model
                     Logger.Info($"Order discarded randomly: {randOrder.Name}-{randOrder.Value}-{randOrder.ShelfType}");
                 }
 
-                order.ActuallyPlacedShelfType = _name;
                 _ = _orders.TryAdd(order, 0);
-                order.OnDie += Order_OnDie;
+                order.OnFinish += Order_OnFinish;
                 Logger.Info($"Order received/processed/placed: {order.Name}-{order.ShelfType}-{order.Value} on shelf: {_name}");
 
                 return true;
             }
         }
 
-        internal bool Remove(Order order)
+        internal void Remove(Order order)
         {
-            lock (_lock)
+            lock (_lockObj)
             {
                 if (_orders.ContainsKey(order))
                 {
-                    order.OnDie -= Order_OnDie;
+                    order.OnFinish -= Order_OnFinish;
                     _ = _orders.TryRemove(order, out byte val);
-                    return true;
                 }
-
-                return false;
             }
         }
 
-        private void Order_OnDie(Order order, bool isDelivery = false)
+        private void Order_OnFinish(Order order, bool isDelivered)
         {
             Remove(order);
-            if (isDelivery)
+            if (isDelivered)
             {
                 Logger.Info($"Order delivered: {order.Name}-{order.Value}");
             }
             else
             {
-                Logger.Warn($"Order died: {order.Name}-{order.Value}");
+                Logger.Warn($"Order decayed: {order.Name}-{order.Value}");
             }
         }
 
@@ -122,6 +120,5 @@ namespace OrderSimulation.Model
 
             return builder.ToString();
         }
-
     }
 }

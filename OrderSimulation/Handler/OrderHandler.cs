@@ -1,41 +1,51 @@
 ﻿//-----------------------------------------------------------------------------
 // File Name   : OrderHandler
 // Author      : junlei
-// Date        : 6/13/2020 3:43:05 PM
+// Date        : 6/13/2020 5:50:10 PM
 // Description : 
 // Version     : 1.0.0      
 // Updated     : 
 //
 //-----------------------------------------------------------------------------
-using Newtonsoft.Json;
+using OrderSimulation.Config;
 using OrderSimulation.Model;
-using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace OrderSimulation.Handler
 {
+    /// <summary>
+    /// the meditator events between subscribers and publisher
+    /// </summary>
     public class OrderHandler
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        public OrderConfig Config { get; }
 
-        public OrderHandler()
+        private readonly ISet<ISubscriber> _subscribers = new HashSet<ISubscriber>();
+
+        public OrderHandler(OrderConfig config)
         {
+            Config = config;
         }
 
-        public static List<Order> LoadOrders(string orderPath)
+        public void Publish(Order order)
         {
-            try
+            foreach (var sub in _subscribers)
             {
-                Logger.Info("Loading orders...");
-                return JsonConvert.DeserializeObject<List<Order>>(File.ReadAllText(orderPath));
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                return null;
+                sub.Process(order);
             }
         }
 
+        public void Subscribe(ISubscriber subscriber)
+        {
+            _subscribers.Add(subscriber);
+        }
+
+        public void UnSbscribe(ISubscriber subscriber)
+        {
+            if (_subscribers.Contains(subscriber))
+            {
+                _subscribers.Remove(subscriber);
+            }
+        }
     }
 }

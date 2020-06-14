@@ -13,21 +13,24 @@ using System.Collections.Generic;
 
 namespace OrderSimulation.Handler
 {
+    /// <summary>
+    /// publisher: get orders....
+    /// </summary>
     public class Publisher
     {
-        private readonly EventAggregator _eventAggregator;
-        public Publisher(EventAggregator eventAggregator)
+        private readonly OrderHandler _orderHandler;
+        public Publisher(OrderHandler handler)
         {
-            _eventAggregator = eventAggregator;
+            _orderHandler = handler;
         }
 
         public void Publish(List<Order> orders)
         {
-            var ingestRate = _eventAggregator.Config.IngestionRate;
+            var ingestRate = _orderHandler.Config.IngestionRate;
             foreach (var ord in orders)
             {
                 ord.Start();
-                _eventAggregator.Publish(ord);
+                _orderHandler.Publish(ord);
 
                 Task.Delay(1000 / ingestRate).Wait();
             }

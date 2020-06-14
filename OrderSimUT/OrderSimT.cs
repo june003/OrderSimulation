@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using OrderSimulation.Handler;
+using OrderSimulation.Config;
 using OrderSimulation.Model;
 using System.Collections.Generic;
 
@@ -8,23 +8,21 @@ namespace OrderSimUT
     public class OrderSimT
     {
         List<Order> _orders;
+        OrderConfig _config;
 
         [SetUp]
         public void Setup()
         {
-            _orders = OrderHandler.LoadOrders("./config/orders.json");
-
-            var handler = new OrderHandler("./config/config.json");
-            var rlt = handler.ProcessOrders(_orders);
-            if (!rlt)
-            {
-                return;
-            }
+            _orders = OrderConfig.LoadOrders("./config/orders.json");
+            _config = OrderConfig.LoadConfig("./config/config.json");
         }
 
         [Test]
-        public void Test1()
+        public void TestOrder()
         {
+            Assert.IsTrue(_orders.Count > 0);
+
+
             Assert.Pass();
         }
     }
