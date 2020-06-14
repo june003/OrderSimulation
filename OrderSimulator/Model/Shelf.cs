@@ -39,8 +39,8 @@ namespace OrderSimulation.Model
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private readonly ShelfType _type;
         private readonly int _capacity;
-        private readonly ShelfType _name;
 
         private readonly Random _rand = new Random();
         private readonly object _lockObj = new object();
@@ -49,9 +49,9 @@ namespace OrderSimulation.Model
         // use the threadsafe concurrent dictioary
         private readonly ConcurrentDictionary<Order, byte> _orders = new ConcurrentDictionary<Order, byte>();
 
-        public Shelf(ShelfType name, int capacity)
+        public Shelf(ShelfType type, int capacity)
         {
-            _name = name;
+            _type = type;
             _capacity = capacity;
         }
 
@@ -79,8 +79,9 @@ namespace OrderSimulation.Model
                 }
 
                 _ = _orders.TryAdd(order, 0);
+                order.SetShelfDecayModifier(_type);
                 order.OnFinish += Order_OnFinish;
-                Logger.Info($"Order received/processed/placed: {order.Name}-{order.Value}-{order.ShelfType} on shelf: {_name}");
+                Logger.Info($"Order received/processed/placed: {order.Name}-{order.Value}-{order.ShelfType} on shelf: {_type}");
 
                 return true;
             }
@@ -118,7 +119,7 @@ namespace OrderSimulation.Model
 
         internal string GetInfo()
         {
-            var builder = new StringBuilder($"Shelf '{_name}' has {_orders.Count} orders: \r\n");
+            var builder = new StringBuilder($"Shelf '{_type}' has {_orders.Count} orders: \r\n");
             foreach (var order in _orders.Keys)
             {
                 builder.AppendLine($"    {order.Name}-{order.Value}");

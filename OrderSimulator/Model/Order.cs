@@ -14,7 +14,7 @@ using System.Timers;
 namespace OrderSimulation.Model
 {
     /// <summary>
-    /// order information 
+    /// order information
     /// </summary>
     public class Order
     {
@@ -28,26 +28,13 @@ namespace OrderSimulation.Model
         [JsonProperty("decayRate")]
         public decimal DecayRate { get; set; }
 
-        private ShelfType _shelfType;
         [JsonProperty("temp")]
-        public ShelfType ShelfType
-        {
-            get { return _shelfType; }
-            set
-            {
-                _shelfType = value;
-                _shelfDecayModifier = (_shelfType == ShelfType.Cold
-                    || ShelfType == ShelfType.Hot
-                    || ShelfType == ShelfType.Frozen) ? 1 : 2;
-            }
-        }
+        public ShelfType ShelfType { get; set; }
 
         /// <summary>
         /// if the courier is ready
         /// </summary>
         public bool CourierAssigned { get; set; } = false;
-
-        private int _shelfDecayModifier;
 
         /// <summary>
         /// order deteriorates with time, and Value becomes less
@@ -63,6 +50,14 @@ namespace OrderSimulation.Model
 
                 return (ShelfLife - DecayRate * _age * _shelfDecayModifier) / ShelfLife;
             }
+        }
+
+        private int _shelfDecayModifier = 0;
+        public void SetShelfDecayModifier(ShelfType shelfType)
+        {
+            _shelfDecayModifier = (shelfType == ShelfType.Cold
+             || shelfType == ShelfType.Hot
+             || shelfType == ShelfType.Frozen) ? 1 : 2;
         }
 
         public event Action<Order, bool> OnFinish;  // decay? delivered? or discarded randomly?
