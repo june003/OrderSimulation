@@ -91,7 +91,6 @@ namespace OrderSimUT
             Assert.Pass();
         }
 
-
         [Test]
         public void TestPubSub()
         {
@@ -124,7 +123,7 @@ namespace OrderSimUT
             var orders = new List<Order> { order1, order2 };
             pub.Publish(orders);
 
-            Task.Delay(7000).Wait(); // deliver comes while order noe decay
+            Task.Delay(7000).Wait(); // deliver comes while order not decay
 
             var shelf1 = kitchenHandler.GetShelfOf(order1);
             var shelf2 = kitchenHandler.GetShelfOf(order2);
@@ -143,6 +142,11 @@ namespace OrderSimUT
         {
             // eg. 1000 orders with same temperature Hot
             // overflow shelf never exceed 15
+
+            var config = new OrderConfig
+            {
+                IngestionRate = 500,
+            };
             Assert.Pass();
         }
     }

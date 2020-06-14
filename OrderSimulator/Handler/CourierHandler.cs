@@ -32,7 +32,7 @@ namespace OrderSimulation.Handler
             await Task.Run(async () =>
             {
                 var delay = _rand.Next(2, 7);
-                Logger.Info($"Courier comes {delay}\" later for order {order.Name}-{order.Name}."); // 2~6" later                
+                Logger.Info($"Courier comes {delay}s later for order {order.Name}-{order.Value}."); // 2~6" later                
                 await Task.Delay(delay * 1000);
 
                 order.CourierAssigned = true;

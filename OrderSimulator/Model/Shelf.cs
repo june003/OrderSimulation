@@ -119,9 +119,9 @@ namespace OrderSimulation.Model
         internal string GetInfo()
         {
             var builder = new StringBuilder($"Shelf '{_name}' has {_orders.Count} orders: \r\n");
-            foreach (var ord in _orders.Keys)
+            foreach (var order in _orders.Keys)
             {
-                builder.AppendLine($"    {ord.Name}-{ord.Value}");
+                builder.AppendLine($"    {order.Name}-{order.Value}");
             }
 
             return builder.ToString();

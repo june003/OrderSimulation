@@ -15,30 +15,19 @@ namespace OrderSimulation
 {
     class Program
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
         static void Main(string[] args)
         {
-            Logger.Info("Start...");
-            try
-            {
-                var config = OrderConfig.LoadConfig("./config/config.json");
+            var config = OrderConfig.LoadConfig("./config/config.json");
 
-                var handler = new OrderHandler(config);
-                var pub = new Publisher(handler);
-                var kitchenHandler = new KitchenHandler(handler);
-                var courierHandler = new CourierHandler(handler);
+            var handler = new OrderHandler(config);
+            var pub = new Publisher(handler);
+            var kitchenHandler = new KitchenHandler(handler);  // subscriber
+            var courierHandler = new CourierHandler(handler);  // subscriber
 
-                var orders = OrderConfig.LoadOrders("./config/orders.json");
-                pub.Publish(orders);
+            var orders = OrderConfig.LoadOrders("./config/orders.json");
+            pub.Publish(orders);
 
-                Console.ReadKey();
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                return;
-            }
+            Console.ReadKey();
         }
     }
 }

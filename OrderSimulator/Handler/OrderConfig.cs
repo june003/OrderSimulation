@@ -38,7 +38,7 @@ namespace OrderSimulation.Config
                     return null;
                 }
 
-                if (config.IngestionRate > 1000)  // can be removed/optimized 
+                if (config.IngestionRate > 1000)  // can be removed/optimized allowed?
                 {
                     Logger.Error("Please specify a valid ingestion rate(cannot process to many orders): (0, 1000].");
                     return null;
