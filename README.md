@@ -1,6 +1,6 @@
 # OrderSimulator (the project)
 
-1. Development enrironment: 
+1. Development environment: 
     1. C# language, .NET Core 3.1
     1. Visual Studio 2019 
     1. Windows 10
